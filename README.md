@@ -106,9 +106,6 @@ to access shell
 
 `docker exec -it <container_id> ./manage.py shell`
 
-example:
-
-`docker exec -it 104f3eaba71c ./manage.py shell`
 ## fun beggins 
 in shell:
 
