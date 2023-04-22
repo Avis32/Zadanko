@@ -104,4 +104,4 @@ class UserAnonymizer(ModelAnonymizer):
     @staticmethod
     def anonymize_addresses(field):
         for instance in field.all():
-            UserAddressAnonymizer(instance=instance).anonymize
+            UserAddressAnonymizer(instance=instance).anonymize()

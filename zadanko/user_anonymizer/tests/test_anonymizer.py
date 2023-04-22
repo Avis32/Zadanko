@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth.models import User
 from user_anonymizer.anonymizers import (ModelAnonymizer, NotAllFieldsIncluded,
                                          UserAnonymizer)
-from user_anonymizer.models import ActivityLog
+from user_anonymizer.models import ActivityLog, Address
 from user_anonymizer.tests.factories import (ActivityLogFactory,
                                              AddressFactory, UserFactory)
 from user_anonymizer.utils import encode_value
@@ -28,10 +28,29 @@ def test_if_user_anonymizer_deletes_activity_logs(db):
 
 def test_if_user_anonymizer_keeps_addresses(db):
     user = UserFactory()
-    ActivityLogFactory.create_batch(10, user=user)
-    assert user.activity_logs.count() == 10
+    AddressFactory.create_batch(10, user=user)
+    assert user.addresses.count() == 10
     UserAnonymizer(user).anonymize()
-    assert ActivityLog.objects.count() == 0
+    assert user.addresses.count() == 10
+
+
+def test_if_user_anonymizer_anonymizes_addresses(db):
+    user = UserFactory()
+    email = "contact_email@example.com"
+    AddressFactory(
+        user=user,
+        street="street",
+        postal_code="postal_code",
+        city="city",
+        contact_email=email,
+    )
+    UserAnonymizer(user).anonymize()
+    address: Address = user.addresses.last()
+    assert not address.street
+    assert not address.postal_code
+    assert not address.city
+    hashed_email = encode_value(email)
+    assert Address.objects.filter(contact_email=hashed_email).exists()
 
 
 def test_if_model_anonymizer_raises_error_when_not_all_fields_are_used(db):
