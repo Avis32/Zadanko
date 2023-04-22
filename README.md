@@ -89,8 +89,53 @@ class UserAnonymizer(ModelAnonymizer):
     @staticmethod
     def anonymize_addresses(field):
         for instance in field.all():
-            UserAddressAnonymizer(instance=instance).anonymize
+            UserAddressAnonymizer(instance=instance).anonymize()
 ```
 
-# How to Install
-tbd in next commit :)
+# How to Run
+## Best way to run this example is to run it with docker 
+### start container
+`docker build -t zadanko . && docker run --rm -d zadanko`
+### access container
+`docker ps` to extract container id <br>
+|CONTAINER ID|IMAGE|COMMAND|CREATED|STATUS|PORTS|NAMES
+|---|---|---|---|---|---|---|
+|104f3eaba71c|zadanko|"python manage.py ru…"|3 seconds ago|Up 2 seconds|8000/tcp|cool_lederberg
+
+to access shell
+
+`docker exec -it <container_id> ./manage.py shell`
+
+example:
+
+`docker exec -it 104f3eaba71c ./manage.py shell`
+## fun beggins 
+in shell:
+
+`from user_anonymizer.tests.factories import UserFactory, AddressFactory, ActivityLogFactory`
+
+then create some data to test
+
+example:
+```
+user = UserFactory()
+AddressFactory.create_batch(10, user=user)
+ActivityLogFactory.create_batch(40, user=user)
+vars(user) # this is data before anonymization
+user.id
+Out: 1
+```
+run anonymizator in another terminal
+
+`docker exec -it <container_id> ./manage.py anonymize_user 1`
+
+get back to previous terminal and check how anonymizator worked :)
+
+```
+user.activity_logs.count() # Out: 0
+user.refresh_from_db()
+vars(user) # this is after anonymization
+```
+
+## Running tests
+`docker exec -it <container_id> pytest`
